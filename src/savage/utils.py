@@ -20,13 +20,27 @@ def result_to_dict(res):
     return [dict(zip(keys, row)) for row in res]
 
 
+def check_other_dict(dictionary):
+    extra_dict = {}
+    for key, value in list(dictionary.items()):
+        if isinstance(value, dict):
+            extra_dict[key] = dictionary[key]
+            del dictionary[key]
+
+    return extra_dict, dictionary
+
+
 def compare_dicts(old_d, new_d):
     if not old_d:
         old_d = {}
         for key in new_d.keys():
-            old_d[key]=None
+            old_d[key] = None
 
-    changed_values_set = set.symmetric_difference(set(old_d.items()), set(new_d.items()))
+    old_extra, old_d = check_other_dict(old_d)
+    new_extra, new_d = check_other_dict(new_d)
+
+    changed_values_set = set.symmetric_difference(set(old_d.items()),
+                                                  set(new_d.items()))
     changes = {}
     for pair in list(changed_values_set):
         if pair[0] not in changes:
@@ -41,6 +55,13 @@ def compare_dicts(old_d, new_d):
         elif pair[0] in old_d:
             changes[pair[0]]['prev'] = pair[1]
             changes[pair[0]]['this'] = None
+
+    if old_extra or new_extra:
+        for key in list(set(list(old_extra.keys()) + list(new_extra.keys()))):
+            val = compare_dicts(old_extra.get(key, None), new_extra.get(key, None))
+            if val:
+                changes[key] = val
+
     return changes
 
 

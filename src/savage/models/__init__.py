@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from copy import deepcopy
 
 import arrow
 import sqlalchemy as sa
@@ -431,11 +432,14 @@ class SavageModelMixin(object):
                 .where(cls.create_log_select_expression(kwargs))
         ))
         all_changes = []
+        all_history_items_new = []
         for i in range(len(all_history_items)):
             if i is 0:
+                all_history_items_new.append(deepcopy(all_history_items[i]))
                 all_changes.append(utils.compare_rows(None, all_history_items[i]))
             else:
-                all_changes.append(utils.compare_rows(all_history_items[i - 1], all_history_items[i]))
+                all_history_items_new.append(deepcopy(all_history_items[i]))
+                all_changes.append(utils.compare_rows(all_history_items_new[i-1], all_history_items[i]))
 
         return all_changes
 
